@@ -1,0 +1,90 @@
+body { 
+    margin: 0; 
+    overflow: hidden; 
+    font-family: 'Inter', sans-serif; 
+    background-color: #0d1117; /* Dark background like image */
+    color: #c9d1d9; /* Light text color */
+    display: flex; /* Use flexbox for layout */
+}
+canvas { 
+    display: block; 
+    flex-grow: 1; /* Canvas takes remaining space */
+}
+.panel-container {
+    display: flex;
+    flex-direction: column; /* Stack panels vertically */
+    padding: 15px;
+    background-color: #161b22; /* Panel background */
+    border-right: 1px solid #30363d; /* Separator */
+    width: 320px; /* Fixed width for panels */
+    box-sizing: border-box;
+    overflow-y: auto;
+}
+.panel {
+    background-color: #0d1117; /* Inner panel background */
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+.panel h2 {
+    font-size: 1.1em;
+    color: #58a6ff; /* Accent color for headings */
+    margin-top: 0;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #30363d;
+    padding-bottom: 10px;
+}
+.control-group, .data-group {
+    margin-bottom: 15px;
+}
+.control-group label, .data-group .label {
+    display: block;
+    font-size: 0.9em;
+    margin-bottom: 5px;
+    color: #8b949e; /* Lighter label color */
+}
+.control-group input[type="range"] {
+    width: 100%;
+    margin-bottom: 3px;
+}
+.control-group .value-display, .data-group .value {
+    font-size: 0.95em;
+    color: #c9d1d9;
+    font-weight: bold;
+}
+ .data-group .value {
+    padding: 8px;
+    background-color: #161b22;
+    border-radius: 4px;
+    border: 1px solid #30363d;
+    min-height: 1.2em; /* Ensure consistent height */
+ }
+
+#resetButton {
+    padding: 10px 15px;
+    background-color: #238636; /* Green button */
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    width: 100%;
+    font-size: 1em;
+    margin-top: 10px;
+}
+#resetButton:hover {
+    background-color: #2ea043;
+}
+#infoToast { /* Renamed from #info to avoid conflict if any */
+    position: absolute;
+    top: 10px;
+    left: calc(320px + (100% - 320px) / 2); /* Center in the canvas area */
+    transform: translateX(-50%);
+    padding: 10px 20px;
+    background-color: rgba(30, 36, 45, 0.85);
+    color: #c9d1d9;
+    border-radius: 6px;
+    z-index: 1000;
+    font-size: 0.9em;
+    border: 1px solid #30363d;
+}

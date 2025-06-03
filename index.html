@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Three.js Spacecraft - Gravity Simulation with UI</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="panel-container">
+        <div class="panel">
+            <h2><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-sliders" viewBox="0 0 16 16" style="margin-right: 8px; vertical-align: -2px;"><path fill-rule="evenodd" d="M11.5 2a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3M9.05 3a2.5 2.5 0 0 1 4.9 0H16v1h-2.05a2.5 2.5 0 0 1-4.9 0H0V3zM4.5 7a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3M2.05 8a2.5 2.5 0 0 1 4.9 0H16v1H6.95a2.5 2.5 0 0 1-4.9 0H0V8zm9.45 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3m-2.5 1a2.5 2.5 0 0 1 4.9 0H16v1h-2.05a2.5 2.5 0 0 1-4.9 0H0v-1z"/></svg>Simulation Parameters</h2>
+            <div class="control-group">
+                <label for="scMassSlider">Spacecraft Mass: <span id="scMassValue" class="value-display">1.0</span> tons</label>
+                <input type="range" id="scMassSlider" min="0.1" max="10" value="1.0" step="0.1">
+            </div>
+            <div class="control-group">
+                <label for="orbDistSlider">Orbital Distance: <span id="orbDistValue" class="value-display">7500</span> km</label>
+                <input type="range" id="orbDistSlider" min="5000" max="40000" value="7500" step="100">
+            </div>
+            <div class="control-group">
+                <label for="initVelSlider">Initial Velocity: <span id="initVelValue" class="value-display">7.20</span> km/s</label>
+                <input type="range" id="initVelSlider" min="1.0" max="15.0" value="7.2" step="0.1">
+            </div>
+             <button id="resetButton">Reset Simulation</button>
+        </div>
+
+        <div class="panel">
+            <h2><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-graph-up" viewBox="0 0 16 16" style="margin-right: 8px; vertical-align: -2px;"><path fill-rule="evenodd" d="M0 0h1v15h15v1H0zm10 3.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-1 0V4.9l-3.613 4.417a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61L13.445 4H10.5a.5.5 0 0 1-.5-.5"/></svg>Real-time Physics Data</h2>
+            <div class="data-group">
+                <span class="label">Gravitational Force:</span>
+                <div id="gravForceDisplay" class="value">N/A</div>
+            </div>
+            <div class="data-group">
+                <span class="label">Spacecraft Velocity:</span>
+                <div id="scVelDisplay" class="value">N/A</div>
+            </div>
+            <div class="data-group">
+                <span class="label">Distance from Earth:</span>
+                <div id="distEarthDisplay" class="value">N/A</div>
+            </div>
+            <div class="data-group">
+                <span class="label">Earth Mass:</span>
+                <div id="earthMassDisplay" class="value">N/A</div>
+            </div>
+        </div>
+    </div>
+    <div id="infoToast">Gravitational Simulation: Spacecraft orbits the central body (Earth).</div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+    <script src="script.js"></script>
+</body>
+</html>
