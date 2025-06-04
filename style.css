@@ -88,3 +88,43 @@ canvas {
     font-size: 0.9em;
     border: 1px solid #30363d;
 }
+
+.button-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.button-group button {
+    flex: 1;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1em;
+    color: white;
+}
+
+#resetButton {
+    background-color: #238636;
+}
+
+#resetButton:hover {
+    background-color: #2ea043;
+}
+
+#pauseButton {
+    background-color: #1f6feb;
+}
+
+#pauseButton:hover {
+    background-color: #388bfd;
+}
+
+#pauseButton.paused {
+    background-color: #da3633;
+}
+
+#pauseButton.paused:hover {
+    background-color: #f85149;
+}
