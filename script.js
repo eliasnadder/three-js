@@ -110,6 +110,7 @@ function setupUIControls() {
   orbDistValue = document.getElementById("orbDistValue");
   initVelValue = document.getElementById("initVelValue");
   resetButton = document.getElementById("resetButton");
+  const clearTrailButton = document.getElementById("clearTrailButton");
 
   const timeScaleSlider = document.getElementById("timeScaleSlider");
   const timeScaleValue = document.getElementById("timeScaleValue");
@@ -145,7 +146,15 @@ function setupUIControls() {
   updateSliderDisplay(initVelSlider, initVelValue, " km/s", 2);
   updateSliderDisplay(timeScaleSlider, timeScaleValue, "x", 1);
 
-  resetButton.addEventListener("click", resetSimulation);
+  // Add clear trail button handler
+  clearTrailButton.addEventListener("click", () => {
+    clearOrbitTrail();
+  });
+
+  // Modify reset button to preserve trail option with Shift key
+  resetButton.addEventListener("click", (event) => {
+    resetSimulation(!event.shiftKey); // Clear trail unless Shift is held
+  });
 
   pauseButton.addEventListener("click", () => {
     isPaused = !isPaused;
@@ -158,7 +167,7 @@ function setupUIControls() {
   });
 }
 
-function resetSimulation() {
+function resetSimulation(clearTrail = true) {
   const realOrbDistKm = parseFloat(orbDistSlider.value);
   const realInitVelKms = parseFloat(initVelSlider.value);
 
@@ -174,10 +183,9 @@ function resetSimulation() {
     }
   }
 
-  // Clear orbit trail
-  if (orbitTrailPoints) {
-    orbitTrailPoints.length = 0;
-    orbitTrail.geometry.setFromPoints([]);
+  // Only clear the trail if specified
+  if (clearTrail) {
+    clearOrbitTrail();
   }
 
   // Reset time-related variables
@@ -495,7 +503,8 @@ function createOrbitTrail() {
   const trailMaterial = new THREE.LineBasicMaterial({
     color: 0x00ff00,
     transparent: true,
-    opacity: 0.5,
+    opacity: 0.8,
+    linewidth: 2
   });
   orbitTrail = new THREE.Line(trailGeometry, trailMaterial);
   scene.add(orbitTrail);
@@ -504,14 +513,37 @@ function createOrbitTrail() {
 function updateOrbitTrail() {
   if (!orbitTrail || !spacecraft) return;
 
+  // Add current position to trail
   orbitTrailPoints.push(spacecraft.position.clone());
-  if (orbitTrailPoints.length > 1000) {
-    // Limit trail length
+  
+  // Keep more points for a longer trail (increased from 1000)
+  const maxTrailPoints = 5000;
+  
+  if (orbitTrailPoints.length > maxTrailPoints) {
+    // Instead of removing points, fade them by adjusting opacity
+    const positions = orbitTrail.geometry.attributes.position;
+    if (positions) {
+      for (let i = 0; i < positions.array.length; i += 3) {
+        const alpha = i / positions.array.length;
+        positions.array[i] *= alpha;
+      }
+    }
+    // Remove oldest point to prevent memory issues
     orbitTrailPoints.shift();
   }
 
+  // Update trail geometry
   orbitTrail.geometry.setFromPoints(orbitTrailPoints);
   orbitTrail.geometry.attributes.position.needsUpdate = true;
+}
+
+// Add a function to clear the trail
+function clearOrbitTrail() {
+  if (orbitTrailPoints) {
+    orbitTrailPoints.length = 0;
+    orbitTrail.geometry.setFromPoints([]);
+    orbitTrail.geometry.attributes.position.needsUpdate = true;
+  }
 }
 
 function handleCollision() {
@@ -962,12 +994,48 @@ function setupCameraControls() {
   });
 
   topViewBtn.addEventListener("click", () => {
-    camera.position.set(0, 150, 0);
-    camera.lookAt(0, 0, 0);
-    controls.target.set(0, 0, 0);
+    // Disable follow mode
     cameraMode.value = "free";
     isFollowingSpacecraft = false;
     controls.enabled = true;
+
+    // Store current camera position for smooth transition
+    const startPosition = camera.position.clone();
+    const startRotation = camera.quaternion.clone();
+
+    // Set new position higher up for better overview
+    const targetPosition = new THREE.Vector3(0, 200, 0);
+    const duration = 1000; // Animation duration in milliseconds
+    const startTime = Date.now();
+
+    // Smooth transition animation
+    function animateCamera() {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      
+      // Smooth easing function
+      const easeProgress = 1 - Math.pow(1 - progress, 3);
+      
+      // Interpolate position
+      camera.position.lerpVectors(startPosition, targetPosition, easeProgress);
+      
+      // Look at center
+      camera.lookAt(0, 0, 0);
+      
+      // Update controls
+      controls.target.set(0, 0, 0);
+      controls.update();
+
+      if (progress < 1) {
+        requestAnimationFrame(animateCamera);
+      }
+    }
+
+    animateCamera();
+    
+    // Reset camera up vector to ensure proper orientation
+    camera.up.set(0, 0, -1);
+    camera.updateProjectionMatrix();
   });
 
   sideViewBtn.addEventListener("click", () => {
