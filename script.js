@@ -1,5 +1,8 @@
-// Global variables
+//* Global variables
 let scene, camera, renderer, spacecraft, controls, engineGlow, starField, planetsGroup, centralBody;
+let orbitTrail, orbitTrailPoints;
+let isPaused = false;
+let timeScale = 1.0;
 const clock = new THREE.Clock();
 
 const G_SIM = 20; 
@@ -48,6 +51,7 @@ function init() {
     setupUIControls();
     
     resetSimulation(); 
+    createOrbitTrail();
 
     controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true; controls.dampingFactor = 0.05;
@@ -68,6 +72,10 @@ function setupUIControls() {
     orbDistValue = document.getElementById('orbDistValue');
     initVelValue = document.getElementById('initVelValue');
     resetButton = document.getElementById('resetButton');
+    
+    const timeScaleSlider = document.getElementById('timeScaleSlider');
+    const timeScaleValue = document.getElementById('timeScaleValue');
+    const pauseButton = document.getElementById('pauseButton');
 
     gravForceDisplay = document.getElementById('gravForceDisplay');
     scVelDisplay = document.getElementById('scVelDisplay');
@@ -83,12 +91,27 @@ function setupUIControls() {
     scMassSlider.addEventListener('input', () => updateSliderDisplay(scMassSlider, scMassValue, " tons"));
     orbDistSlider.addEventListener('input', () => updateSliderDisplay(orbDistSlider, orbDistValue, " km", 0));
     initVelSlider.addEventListener('input', () => updateSliderDisplay(initVelSlider, initVelValue, " km/s", 2));
+    timeScaleSlider.addEventListener('input', () => {
+        timeScale = parseFloat(timeScaleSlider.value);
+        updateSliderDisplay(timeScaleSlider, timeScaleValue, "x", 1);
+    });
     
     updateSliderDisplay(scMassSlider, scMassValue, " tons");
     updateSliderDisplay(orbDistSlider, orbDistValue, " km", 0);
     updateSliderDisplay(initVelSlider, initVelValue, " km/s", 2);
+    updateSliderDisplay(timeScaleSlider, timeScaleValue, "x", 1);
 
     resetButton.addEventListener('click', resetSimulation);
+    
+    pauseButton.addEventListener('click', () => {
+        isPaused = !isPaused;
+        pauseButton.textContent = isPaused ? "Resume" : "Pause";
+        pauseButton.classList.toggle('paused', isPaused);
+        if (!isPaused) {
+            // Reset the clock delta to prevent large time jump
+            clock.getDelta();
+        }
+    });
 }
 
 function resetSimulation() {
@@ -106,7 +129,21 @@ function resetSimulation() {
             spacecraft.position.setLength(minSafeDistance);
         }
     }
-    clock.elapsedTime = 0; 
+    
+    // Clear orbit trail
+    if (orbitTrailPoints) {
+        orbitTrailPoints.length = 0;
+        orbitTrail.geometry.setFromPoints([]);
+    }
+    
+    // Reset time-related variables
+    clock.elapsedTime = 0;
+    isPaused = false;
+    const pauseButton = document.getElementById('pauseButton');
+    if (pauseButton) {
+        pauseButton.textContent = "Pause";
+        pauseButton.classList.remove('paused');
+    }
 }
 
 function createCentralBody(lightToAttach) {
@@ -233,6 +270,95 @@ function createSpacecraft() {
     scene.add(spacecraft);
 }
 
+function createOrbitTrail() {
+    orbitTrailPoints = [];
+    const trailGeometry = new THREE.BufferGeometry();
+    const trailMaterial = new THREE.LineBasicMaterial({
+        color: 0x00ff00,
+        transparent: true,
+        opacity: 0.5
+    });
+    orbitTrail = new THREE.Line(trailGeometry, trailMaterial);
+    scene.add(orbitTrail);
+}
+
+function updateOrbitTrail() {
+    if (!orbitTrail || !spacecraft) return;
+    
+    orbitTrailPoints.push(spacecraft.position.clone());
+    if (orbitTrailPoints.length > 1000) { // Limit trail length
+        orbitTrailPoints.shift();
+    }
+    
+    orbitTrail.geometry.setFromPoints(orbitTrailPoints);
+    orbitTrail.geometry.attributes.position.needsUpdate = true;
+}
+
+function handleCollision() {
+    // Reset velocity
+    spacecraftVelocity_SIM.set(0, 0, 0);
+    
+    // Move spacecraft to safe distance
+    const safeDistance = centralBody.geometry.parameters.radius * 1.2;
+    spacecraft.position.normalize().multiplyScalar(safeDistance);
+    
+    // Create explosion effect
+    createExplosionEffect(spacecraft.position.clone());
+}
+
+function createExplosionEffect(position) {
+    const particleCount = 50;
+    const geometry = new THREE.BufferGeometry();
+    const positions = new Float32Array(particleCount * 3);
+    const colors = new Float32Array(particleCount * 3);
+    
+    for (let i = 0; i < particleCount; i++) {
+        const i3 = i * 3;
+        positions[i3] = position.x;
+        positions[i3 + 1] = position.y;
+        positions[i3 + 2] = position.z;
+        
+        colors[i3] = 1;  // R
+        colors[i3 + 1] = 0.5;  // G
+        colors[i3 + 2] = 0;  // B
+    }
+    
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    
+    const material = new THREE.PointsMaterial({
+        size: 2,
+        vertexColors: true,
+        transparent: true,
+        opacity: 1
+    });
+    
+    const particles = new THREE.Points(geometry, material);
+    scene.add(particles);
+    
+    // Animate particles
+    const velocities = positions.map(() => (Math.random() - 0.5) * 2);
+    
+    function animateParticles() {
+        const positions = particles.geometry.attributes.position.array;
+        for (let i = 0; i < positions.length; i += 3) {
+            positions[i] += velocities[i] * 0.1;
+            positions[i + 1] += velocities[i + 1] * 0.1;
+            positions[i + 2] += velocities[i + 2] * 0.1;
+        }
+        particles.geometry.attributes.position.needsUpdate = true;
+        material.opacity -= 0.02;
+        
+        if (material.opacity > 0) {
+            requestAnimationFrame(animateParticles);
+        } else {
+            scene.remove(particles);
+        }
+    }
+    
+    animateParticles();
+}
+
 function onWindowResize() {
     camera.aspect = (window.innerWidth - 320) / window.innerHeight;
     camera.updateProjectionMatrix();
@@ -241,7 +367,9 @@ function onWindowResize() {
 
 function animate() {
     requestAnimationFrame(animate);
-    const deltaTime = Math.min(clock.getDelta(), 0.1); 
+    if (isPaused) return;
+    
+    const deltaTime = Math.min(clock.getDelta(), 0.1) * timeScale;
     const elapsedTime = clock.getElapsedTime();
 
     if (spacecraft && centralBody) {
@@ -250,17 +378,17 @@ function animate() {
         const distance_SIM = Math.sqrt(distanceSq_SIM);
 
         const centralBodyRadius = centralBody.geometry.parameters.radius;
-        const spacecraftEffectiveRadius = TARGET_BODY_LENGTH_SIM_UNITS * 0.5; // Using global constant
+        const spacecraftEffectiveRadius = TARGET_BODY_LENGTH_SIM_UNITS * 0.5;
 
-        if (distance_SIM < centralBodyRadius + spacecraftEffectiveRadius * 0.5 ) { // Adjusted collision threshold
-             // Stop simulation or bounce (currently does nothing to stop)
-            // console.log("Collision detected!");
+        if (distance_SIM < centralBodyRadius + spacecraftEffectiveRadius * 0.5) {
+            handleCollision();
         } else {
             const forceMagnitude_SIM = (G_SIM * centralBodyMass_SIM * spacecraftMass_SIM) / distanceSq_SIM;
             const forceVector_SIM = directionToCentralBody.normalize().multiplyScalar(forceMagnitude_SIM);
             const acceleration_SIM = forceVector_SIM.divideScalar(spacecraftMass_SIM);
-            spacecraftVelocity_SIM.add(acceleration_SIM.multiplyScalar(simulationTimeStep));
-            spacecraft.position.add(spacecraftVelocity_SIM.clone().multiplyScalar(simulationTimeStep));
+            spacecraftVelocity_SIM.add(acceleration_SIM.multiplyScalar(deltaTime));
+            spacecraft.position.add(spacecraftVelocity_SIM.clone().multiplyScalar(deltaTime));
+            updateOrbitTrail();
         }
         if (spacecraftVelocity_SIM.lengthSq() > 0.00001) { // Increased threshold slightly
             const lookAtPosition = new THREE.Vector3().copy(spacecraft.position).add(spacecraftVelocity_SIM);
