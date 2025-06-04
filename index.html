@@ -30,6 +30,38 @@
                 <button id="pauseButton">Pause</button>
                 <button id="resetButton">Reset Simulation</button>
             </div>
+            <div class="control-group">
+                <label for="cameraMode">Camera Mode:</label>
+                <select id="cameraMode" class="camera-select" aria-label="Select camera mode">
+                    <option value="free">Free Camera</option>
+                    <option value="follow">Follow Spacecraft</option>
+                </select>
+                <div class="button-group">
+                    <button id="topViewButton" class="view-button">Top</button>
+                    <button id="sideViewButton" class="view-button">Side</button>
+                    <button id="frontViewButton" class="view-button">Front</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-graph-up" viewBox="0 0 16 16" style="margin-right: 8px; vertical-align: -2px;"><path fill-rule="evenodd" d="M0 0h1v15h15v1H0zm10 3.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-1 0V4.9l-3.613 4.417a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61L13.445 4H10.5a.5.5 0 0 1-.5-.5"/></svg>Orbital Data</h2>
+            <div class="data-group">
+                <span class="label">Orbital Period:</span>
+                <div id="orbitalPeriodDisplay" class="value">N/A</div>
+            </div>
+            <div class="data-group">
+                <span class="label">Apoapsis:</span>
+                <div id="apoapsisDisplay" class="value">N/A</div>
+            </div>
+            <div class="data-group">
+                <span class="label">Periapsis:</span>
+                <div id="periapsisDisplay" class="value">N/A</div>
+            </div>
+            <div class="data-group">
+                <span class="label">Total Energy:</span>
+                <div id="totalEnergyDisplay" class="value">N/A</div>
+            </div>
         </div>
 
         <div class="panel">
